@@ -2,7 +2,7 @@ package Java.MQTT.publisher;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;   // TCP 기반 MQTT 연결,발행,구독
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions; // MQTT 연결 설정 객채
-import org.eclipse.paho.client.mqttv3.MqttMessage;  // 전송할 메사지 객체
+import org.eclipse.paho.client.mqttv3.MqttMessage;  // 메시지 객체
 import org.springframework.stereotype.Component;    // Spring Bean 등록
 
 @Component
