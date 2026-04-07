@@ -1,59 +1,37 @@
 package Java.MQTT.subscriber;
 
-import jakarta.annotation.PostConstruct; // Bean 생성 후 자동 실행 메서드 지정  ( 객체 생성 -> 의존성 주입 완료 -> 해당 메서드 실행 )
-import jakarta.annotation.PreDestroy; // Bean 소멸 직전 실행 메서드 지정 (Spring 종료시 -> 자원 정리 메서드 실행)
+import jakarta.annotation.PostConstruct;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.springframework.stereotype.Component;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class MqttSubscriber {
+    private final MqttConnectOptions options;
+    private final MqttCallbackHandler callbackHandler;
 
-    // 상수 정의 ( 브로커 주소, 클라이언트 아이디, 구독할 토픽 )
-    private static final String BROKER_URL = "tcp://localhost:1883";
-    private static final String CLIENT_ID = "spring-subscriber-client";
-    private static final String TOPIC = "test/topic";
-
-    // 외부주입 ( MQTT 연결 설정, MQTT 메시지 처리 로직 )
-    private final MqttConnectOptions mqttConnectOptions;
-    private final MqttCallbackHandler mqttCallbackHandler;
-
-    private MqttClient client;
-
-    public MqttSubscriber(MqttConnectOptions mqttConnectOptions,
-                          MqttCallbackHandler mqttCallbackHandler) {
-        this.mqttConnectOptions = mqttConnectOptions;
-        this.mqttCallbackHandler = mqttCallbackHandler;
+    public MqttSubscriber(MqttConnectOptions options, MqttCallbackHandler callbackHandler) {
+        this.options = options;
+        this.callbackHandler = callbackHandler;
     }
 
     @PostConstruct
-    public void subscribe() {
+    public void init() {
         try {
-            client = new MqttClient(BROKER_URL, CLIENT_ID);
-            client.setCallback(mqttCallbackHandler);
-            client.connect(mqttConnectOptions); // MQTT 연결 ( 1.TCP생성 / 2.CONNECT 패킷 전송 / 3. CONNACK 응답 수신 )
-            client.subscribe(TOPIC, 1);
-
-            System.out.println("[SUBSCRIBE START] topic = " + TOPIC);
-
-        } catch (Exception e) {
-            System.out.println("[SUBSCRIBE ERROR] " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    @PreDestroy
-    public void disconnect() {
-        try {
-            if (client != null && client.isConnected()) {
-                client.disconnect();
-            }
-            if (client != null) {
-                client.close();
-            }
-            System.out.println("[SUBSCRIBE END] disconnected");
-        } catch (Exception e) {
-            System.out.println("[SUBSCRIBE CLOSE ERROR] " + e.getMessage());
+            // 공용 무료 브로커 주소 (broker.emqx.io)
+            // 클라이언트 ID가 중복되면 연결이 끊기므로 랜덤한 ID를 생성합니다.
+            String clientId = "sub-client-" + System.currentTimeMillis();
+            MqttClient client = new MqttClient("tcp://broker.emqx.io:1883", clientId);
+            
+            client.setCallback(callbackHandler);
+            client.connect(options);
+            
+            // "test/topic/123" 이라는 주소로 오는 메시지를 구독합니다.
+            client.subscribe("test/topic/123"); 
+            System.out.println(">>> [MQTT] Subscriber가 'test/topic/123' 구독을 시작했습니다! (ID: " + clientId + ")");
+        } catch (MqttException e) {
+            System.err.println(">>> [MQTT] 연결 실패: " + e.getMessage());
         }
     }
 }

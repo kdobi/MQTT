@@ -24,16 +24,14 @@ public class MqttConfig {
     @Bean
     public MqttConnectOptions mqttConnectOptions() {
         MqttConnectOptions options = new MqttConnectOptions();
-        // 이부분은 내부에서 직접 생성 안하고 yml에서 주입 받아서 사용 가능
-
         options.setCleanSession(true);
         options.setAutomaticReconnect(true);
         options.setConnectionTimeout(10);
         options.setKeepAliveInterval(20);
 
-        // 인증 필요시
-        options.setUserName("username");  // 브로커에 인증할 사용자 이름
-        options.setPassword("password".toCharArray());  // 보안측면에서 String 보다 char이 유리함.
+        // 공용 브로커 테스트를 위해 인증 정보는 잠시 주석 처리합니다.
+        // options.setUserName("username");
+        // options.setPassword("password".toCharArray());
 
         return options;
     }
